@@ -86,7 +86,7 @@
 
                for (let i = 0; i < stdout.length; i++) {
                    if (stdout[i]) {
-                       outputHTML += `<span>${escapeHtml(stdout[i])}</span><br>`
+                       outputHTML += `<span style="white-space: pre-line">${escapeHtml(stdout[i])}</span><br>`
                    }
                }
 
