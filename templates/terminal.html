@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>HTTP Terminal</title>
+    <style>
+        body {
+          background: #303030;
+        }
+        input {
+            border: none;
+            background: transparent;
+            size: 200;
+            color: white;
+        }
+        textarea:focus, input:focus{
+            outline: none;
+        }
+        .content {
+          max-width: 800px;
+          margin: auto;
+          background: #303030;
+          padding: 10px;
+          color: white;
+          line-height: 1.2rem;
+          font-size:12px;
+          font-family: sans-serif;
+
+        }
+    </style>
+</head>
+<body>
+    <div class="content">
+        <h1>terminal</h1>
+        <div id="terminal"></div>
+        <br><br>
+        <div id="cmd">
+            <strong>&gt;</strong><input type="text" id="cmd-input" name="cmd-inpput">&nbsp;<span><a id="clear-terminal" href="#">clear</a></span>
+        </div>
+    </div>
+</body>
+<script>
+
+    let cmdInput = document.getElementById("cmd-input");
+    let terminal = document.getElementById("terminal");
+    let clearTerminal = document.getElementById("clear-terminal");
+    
+    clearTerminal.addEventListener("click", event => {
+        terminal.innerHTML = "";
+    })
+
+    cmdInput.addEventListener("keydown", event => {
+        if (event.isComposing || event.keyCode === 229) {
+            return;
+        }
+        if (event.keyCode === 13) {
+            terminal.innerHTML += `<span> &gt; ${cmdInput.value}</span><br>`;
+            send_command(cmdInput.value);
+            cmdInput.value ="";
+        }
+    });
+
+    cmdInput.focus();
+    
+    function escapeHtml(unsafe) {
+        return unsafe
+             .replace(/&/g, "&amp;")
+             .replace(/</g, "&lt;")
+             .replace(/>/g, "&gt;")
+             .replace(/"/g, "&quot;")
+             .replace(/'/g, "&#039;");
+    }
+
+    function send_command(cmd) {
+
+        let xhttp = new XMLHttpRequest();
+
+        xhttp.onreadystatechange = function() {
+
+            if (this.readyState == 4 && this.status == 200) {
+
+               // let terminal = document.getElementById("terminal");
+               let resp = JSON.parse(this.response);
+               let stdout = resp['stdout']
+               let stderr = resp['stderr']
+               let outputHTML = '';
+
+               for (let i = 0; i < stdout.length; i++) {
+                   if (stdout[i]) {
+                       outputHTML += `<span>${escapeHtml(stdout[i])}</span><br>`
+                   }
+               }
+
+               document.getElementById("terminal").innerHTML += outputHTML;
+               cmdInput.scrollIntoView(false);
+               cmdInput.disabled = false;
+               cmdInput.focus();
+            }
+        };
+
+        cmdInput.disabled = true;
+        data = {"command":cmd};
+        xhttp.open("POST", "/command", true);
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(JSON.stringify(data));
+    }
+
+</script>
+</html>
